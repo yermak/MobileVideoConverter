@@ -29,14 +29,10 @@
         <RowConstraints vgrow="NEVER"/>
     </rowConstraints>
     <children>
-        <Label GridPane.rowIndex="0">Add MP3 files to convert and bring them in right order...</Label>
+        <Label GridPane.rowIndex="0">Add MP4/MOV files to convert and bring them in right order...</Label>
         <ListView GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.rowSpan="10" fx:id="fileList"
                   GridPane.valignment="TOP">
         </ListView>
-
-        <HBox GridPane.columnIndex="0" GridPane.rowIndex="11" GridPane.columnSpan="2">
-            <fx:include source="/uk/yermak/audiobookconverter/fx/mediaplayer.fxml"/>
-        </HBox>
 
         <Button fx:id="addButton" text="Add" minWidth="${screen.visualBounds.width * 0.05}" onAction="#addFiles"
                 GridPane.columnIndex="1" GridPane.rowIndex="1">

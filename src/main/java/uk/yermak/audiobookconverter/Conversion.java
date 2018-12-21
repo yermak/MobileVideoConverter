@@ -18,10 +18,10 @@ import static uk.yermak.audiobookconverter.ProgressStatus.*;
 public class Conversion {
     private final static ExecutorService executorService = Executors.newCachedThreadPool();
     private ObservableList<MediaInfo> media = FXCollections.observableArrayList();
-    private SimpleObjectProperty<ConversionMode> mode = new SimpleObjectProperty<>(ConversionMode.PARALLEL);
+    private SimpleObjectProperty<ConversionMode> mode = new SimpleObjectProperty<>(ConversionMode.BATCH);
     private SimpleObjectProperty<ProgressStatus> status = new SimpleObjectProperty<>(this, "status", READY);
 
-    private AudioBookInfo bookInfo;
+    private MetaData bookInfo;
     private OutputParameters outputParameters;
     private String outputDestination;
 
@@ -30,7 +30,7 @@ public class Conversion {
         this.mode.set(mode);
     }
 
-    public void setBookInfo(AudioBookInfo bookInfo) {
+    public void setBookInfo(MetaData bookInfo) {
         this.bookInfo = bookInfo;
     }
 
@@ -42,7 +42,7 @@ public class Conversion {
         return mode.get();
     }
 
-    public AudioBookInfo getBookInfo() {
+    public MetaData getBookInfo() {
         return bookInfo;
     }
 
@@ -113,10 +113,6 @@ public class Conversion {
 
     public OutputParameters getOutputParameters() {
         return outputParameters;
-    }
-
-    public ObservableList<ArtWork> getPosters() {
-        return bookInfo.getPosters();
     }
 
     public String getOutputDestination() {

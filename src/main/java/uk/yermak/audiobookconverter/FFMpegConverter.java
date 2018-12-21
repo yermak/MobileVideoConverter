@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Yermak on 29-Dec-17.
  */
-public class FFMpegConverter implements Callable<ConverterOutput>, Converter {
+public class FFMpegConverter implements Callable<ConverterOutput>{
     private final StatusChangeListener listener;
     private Conversion conversion;
     private OutputParameters outputParameters;
@@ -51,32 +51,17 @@ public class FFMpegConverter implements Callable<ConverterOutput>, Converter {
             });
             progressParser.start();
 
-            ProcessBuilder ffmpegProcessBuilder;
-            if (outputParameters.isAuto()) {
-                ffmpegProcessBuilder = new ProcessBuilder(FFMPEG,
-                        "-i", mediaInfo.getFileName(),
-                        "-vn",
-                        "-codec:a", "libfdk_aac",
-                        "-f", "ipod",
-                        "-progress", progressParser.getUri().toString(),
-                        outputFileName
-                );
-            } else {
-                ffmpegProcessBuilder = new ProcessBuilder(FFMPEG,
-                        "-i", mediaInfo.getFileName(),
-                        "-vn",
-                        "-codec:a", "libfdk_aac",
-                        "-f", "ipod",
-                        outputParameters.getFFMpegQualityParameter(), outputParameters.getFFMpegQualityValue(),
-                        "-ar", String.valueOf(outputParameters.getFFMpegFrequencyValue()),
-                        "-ac", String.valueOf(outputParameters.getFFMpegChannelsValue()),
-                        "-cutoff", outputParameters.getCutoffValue(),
-                        "-progress", progressParser.getUri().toString(),
-                        outputFileName
-                );
-
-            }
-
+            ProcessBuilder ffmpegProcessBuilder = new ProcessBuilder(FFMPEG,
+                    "-i", mediaInfo.getFileName(),
+                    "-c:v", outputParameters.getEncoder(),
+                    "-preset", outputParameters.getPreset(),
+                    "-q", String.valueOf(outputParameters.getCRF()),
+                    "-c:a", "aac",
+                    "-vbr", String.valueOf(outputParameters.getQuality()),
+                    "-f", "mp4",
+                    "-progress", progressParser.getUri().toString(),
+                    outputFileName
+            );
             process = ffmpegProcessBuilder.start();
 
             InputStream ffmpegIn = process.getInputStream();

@@ -4,31 +4,25 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Side;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import javafx.util.Callback;
 import org.apache.commons.io.FileUtils;
 import org.controlsfx.control.Notifications;
-import org.controlsfx.control.PopOver;
 import uk.yermak.audiobookconverter.*;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -104,10 +98,10 @@ public class FilesController implements ConversionSubscriber {
         String sourceFolder = AppProperties.getProperty("source.folder");
         directoryChooser.setInitialDirectory(Utils.getInitialDirecotory(sourceFolder));
 
-        directoryChooser.setTitle("Select folder with MP3/WMA files for conversion");
+        directoryChooser.setTitle("Select folder with MP4/MOV files for conversion");
         File selectedDirectory = directoryChooser.showDialog(window);
         if (selectedDirectory != null) {
-            Collection<File> files = FileUtils.listFiles(selectedDirectory, new String[]{"mp3", "wma"}, true);
+            Collection<File> files = FileUtils.listFiles(selectedDirectory, new String[]{"mp4", "MOV"}, true);
             processFiles(files);
             AppProperties.setProperty("source.folder", selectedDirectory.getAbsolutePath());
         }
@@ -123,17 +117,17 @@ public class FilesController implements ConversionSubscriber {
     }
 
     private MediaLoader createMediaLoader(List<String> fileNames) {
-        return new FXMediaLoader(fileNames, conversion);
+        return new FFMediaLoader(fileNames, conversion);
     }
 
     private void selectFilesDialog(Window window) {
         final FileChooser fileChooser = new FileChooser();
         String sourceFolder = AppProperties.getProperty("source.folder");
         fileChooser.setInitialDirectory(Utils.getInitialDirecotory(sourceFolder));
-        fileChooser.setTitle("Select MP3/WMA files for conversion");
+        fileChooser.setTitle("Select MP4/MOV files for conversion");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("mp3", "*.mp3"),
-                new FileChooser.ExtensionFilter("wma", "*.wma")
+                new FileChooser.ExtensionFilter("mp4", "*.mp4"),
+                new FileChooser.ExtensionFilter("mov", "*.mov")
         );
         List<File> files = fileChooser.showOpenMultipleDialog(window);
         if (files != null) {
@@ -191,13 +185,13 @@ public class FilesController implements ConversionSubscriber {
 
         List<MediaInfo> media = conversion.getMedia();
         if (media.size() > 0) {
-            AudioBookInfo audioBookInfo = conversion.getBookInfo();
+            MetaData metaData = conversion.getBookInfo();
             MediaInfo mediaInfo = media.get(0);
             String outputDestination = null;
             if (conversion.getMode().equals(ConversionMode.BATCH)) {
                 outputDestination = selectOutputDirectory();
             } else {
-                outputDestination = selectOutputFile(audioBookInfo, mediaInfo);
+                outputDestination = selectOutputFile(metaData, mediaInfo);
             }
             if (outputDestination != null) {
                 String finalName = new File(outputDestination).getName();
@@ -217,7 +211,7 @@ public class FilesController implements ConversionSubscriber {
 
     private static void showNotification(String finalOutputDestination) {
         Notifications.create()
-                .title("AudioBookConverter: Conversion is completed")
+                .title("MobileVideoConvertor: Conversion is completed")
                 .text(finalOutputDestination).show();
     }
 
@@ -230,21 +224,23 @@ public class FilesController implements ConversionSubscriber {
         directoryChooser.setInitialDirectory(Utils.getInitialDirecotory(outputFolder));
         directoryChooser.setTitle("Select destination folder for encoded files");
         File selectedDirectory = directoryChooser.showDialog(env.getWindow());
+        if (selectedDirectory == null) return null;
         AppProperties.setProperty("output.folder", selectedDirectory.getAbsolutePath());
         outputDestination = selectedDirectory.getPath();
         return outputDestination;
     }
 
-    private String selectOutputFile(AudioBookInfo audioBookInfo, MediaInfo mediaInfo) {
+    private String selectOutputFile(MetaData metaData, MediaInfo mediaInfo) {
         JfxEnv env = ConverterApplication.getEnv();
 
         final FileChooser fileChooser = new FileChooser();
         String outputFolder = AppProperties.getProperty("output.folder");
         fileChooser.setInitialDirectory(Utils.getInitialDirecotory(outputFolder));
-        fileChooser.setInitialFileName(Utils.getOuputFilenameSuggestion(mediaInfo.getFileName(), audioBookInfo));
-        fileChooser.setTitle("Save AudioBook");
+        String date = new SimpleDateFormat("YYYY-MM-dd").format(new Date());
+        fileChooser.setInitialFileName(date + ".mp4");
+        fileChooser.setTitle("Save video");
         fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("m4b", "*.m4b")
+                new FileChooser.ExtensionFilter("mp4", "*.mp4")
         );
         File file = fileChooser.showSaveDialog(env.getWindow());
         if (file == null) return null;
@@ -308,71 +304,12 @@ public class FilesController implements ConversionSubscriber {
         ObservableList<MediaInfo> media = this.conversion.getMedia();
         fileList.setItems(media);
         fileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-/* TODO fix buttons behaviour
-        conversion.addStatusChangeListener((observable, oldValue, newValue) ->
-                updateUI(newValue, media.isEmpty(), fileList.getSelectionModel().getSelectedIndices())
-        );
-*/
-
-//        media.addListener((ListChangeListener<MediaInfo>) c -> updateUI(this.conversion.getStatus(), c.getList().isEmpty(), fileList.getSelectionModel().getSelectedIndices()));
 
         if (listener != null) {
             fileList.getSelectionModel().selectedItemProperty().removeListener(listener);
         }
         listener = new MediaInfoChangeListener(conversion);
         fileList.getSelectionModel().selectedItemProperty().addListener(listener);
-    }
-
-    private static class ListViewListCellCallback implements Callback<ListView<MediaInfo>, ListCell<MediaInfo>> {
-        @Override
-        public ListCell<MediaInfo> call(ListView<MediaInfo> param) {
-            ListCell<MediaInfo> mediaCell = new DefaultListCell<>();
-            mediaCell.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
-                @Override
-                public void handle(ContextMenuEvent event) {
-                    GridPane content = new GridPane();
-                    content.setHgap(5);
-                    content.setVgap(5);
-                    content.setPadding(new Insets(10, 10, 10, 10));
-                    content.setPrefWidth(200);
-                    content.setPrefHeight(200);
-                    content.add(new Label("11111111111"), 0, 0);
-                    content.add(new Label("222222222222222"), 1, 0);
-                    PopOver editor = new PopOver(content);
-//                    editor.setWidth(200);
-//                    editor.setHeight(200);
-                    editor.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
-                    editor.setTitle(mediaCell.getItem().getBookInfo().getTitle());
-                    editor.setHeaderAlwaysVisible(true);
-                    editor.setDetachable(false);
-                    editor.show(mediaCell);
-                }
-
-            });
-            return mediaCell;
-        }
-    }
-
-    static class DefaultListCell<T> extends ListCell<T> {
-        @Override
-        public void updateItem(T item, boolean empty) {
-            super.updateItem(item, empty);
-
-            if (empty) {
-                setText(null);
-                setGraphic(null);
-            } else if (item instanceof Node) {
-                setText(null);
-                Node currentNode = getGraphic();
-                Node newNode = (Node) item;
-                if (currentNode == null || !currentNode.equals(newNode)) {
-                    setGraphic(newNode);
-                }
-            } else {
-                setText(item == null ? "null" : item.toString());
-                setGraphic(null);
-            }
-        }
     }
 
     public void play(ActionEvent actionEvent) {
@@ -392,8 +329,6 @@ public class FilesController implements ConversionSubscriber {
             mediaPlayer.play();
             MediaPlayer.Status status = mediaPlayer.getStatus();
             System.out.println("status = " + status);
-
-
         }
 
     }

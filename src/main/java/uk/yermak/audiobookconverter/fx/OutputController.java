@@ -1,10 +1,9 @@
 package uk.yermak.audiobookconverter.fx;
 
-import javafx.beans.InvalidationListener;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Spinner;
 import uk.yermak.audiobookconverter.Conversion;
 import uk.yermak.audiobookconverter.ConversionSubscriber;
 import uk.yermak.audiobookconverter.MediaInfo;
@@ -14,99 +13,55 @@ import uk.yermak.audiobookconverter.OutputParameters;
  * Created by yermak on 08/09/2018.
  */
 public class OutputController implements ConversionSubscriber {
-    @FXML
-    public Spinner<Integer> cutoff;
-    @FXML
-    private Spinner<Integer> parts;
-    @FXML
-    private CheckBox auto;
 
     @FXML
-    private ComboBox<Integer> frequency;
+    private ComboBox<String> encoder;
+
     @FXML
-    private Spinner<Integer> channels;
+    private ComboBox<String> preset;
+
     @FXML
-    private RadioButton cbr;
+    private Spinner<Integer> crf;
+
     @FXML
-    private Spinner<Integer> bitRate;
-    @FXML
-    private RadioButton vbr;
-    @FXML
-    private Slider quality;
+    private ComboBox<Quality> vbr;
+
+    enum Quality {LOWEST(1), LOW(2), MEDIUM(3), HIGH(4), HIGHEST(5);
+        int VALUE;
+        Quality(int i) {
+            this.VALUE = i;
+        }
+    };
+
     private OutputParameters params;
     private ObservableList<MediaInfo> media;
 
-    public void cbr(ActionEvent actionEvent) {
-        bitRate.setDisable(false);
-        cutoff.setDisable(false);
-        quality.setDisable(true);
-        params.setCbr(true);
-
-    }
-
-    public void vbr(ActionEvent actionEvent) {
-        bitRate.setDisable(true);
-        cutoff.setDisable(true);
-        quality.setDisable(false);
-        params.setCbr(false);
-    }
-
     @FXML
     private void initialize() {
-        frequency.getItems().addAll(8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000);
-        frequency.getSelectionModel().select(8);
+
+        encoder.getItems().addAll("HEVC/H265");
+
+        preset.getItems().addAll("ultrafast", "superfast", " veryfast", " faster", "fast", "medium", "slow", "slower", "veryslow", "placebo");
+
+
 
         resetForNewConversion(ConverterApplication.getContext().registerForConversion(this));
 
-        auto.selectedProperty().addListener(o -> params.setAuto(auto.isSelected()));
-        bitRate.valueProperty().addListener(o -> params.setBitRate(bitRate.getValue()));
-        frequency.valueProperty().addListener(o -> params.setFrequency(frequency.getValue()));
-        channels.valueProperty().addListener(o -> params.setChannels(channels.getValue()));
-        quality.valueProperty().addListener(o -> params.setQuality((int) Math.round(quality.getValue())));
-        cutoff.valueProperty().addListener(o -> params.setCutoff(cutoff.getValue()));
+        vbr.getItems().addAll(Quality.values());
+
+        encoder.valueProperty().addListener(o -> params.setEncoder(encoder.getValue()));
+        preset.valueProperty().addListener(o -> params.setPreset(preset.getValue()));
+        crf.valueProperty().addListener(o -> params.setCRF(crf.getValue()));
+
+        vbr.valueProperty().addListener(o -> params.setQuality(vbr.getValue().VALUE));
 
 
-        auto.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            bitRate.setDisable(newValue);
-            frequency.setDisable(newValue);
-            channels.setDisable(newValue);
-            quality.setDisable(newValue);
-            cbr.setDisable(newValue);
-            vbr.setDisable(newValue);
 
-            if (!newValue) {
-                if (cbr.isSelected()) {
-                    bitRate.setDisable(false);
-                    cutoff.setDisable(false);
-                    quality.setDisable(true);
-
-                }
-                if (vbr.isSelected()) {
-                    bitRate.setDisable(true);
-                    cutoff.setDisable(false);
-                    quality.setDisable(false);
-                }
-            }
-
-        });
-
-        media.addListener((InvalidationListener) observable -> updateParameters(media, media.isEmpty()));
-
+        vbr.getSelectionModel().select(Quality.HIGH);
+        preset.getSelectionModel().select(4);
+        encoder.getSelectionModel().select(0);
     }
 
-    private void updateParameters(ObservableList<MediaInfo> media, boolean empty) {
-        if (!empty) {
-            params.updateAuto(media);
-            copyParameters(params);
-        }
-    }
-
-    private void copyParameters(OutputParameters params) {
-        frequency.setValue(params.getFrequency());
-        bitRate.getValueFactory().setValue(params.getBitRate());
-        channels.getValueFactory().setValue(params.getChannels());
-        quality.setValue(params.getQuality());
-    }
 
     @Override
     public void resetForNewConversion(Conversion conversion) {

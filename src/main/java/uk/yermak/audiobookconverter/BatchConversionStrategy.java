@@ -4,12 +4,9 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -46,20 +43,7 @@ public class BatchConversionStrategy implements ConversionStrategy {
                                 .submit(new FFMpegConverter(conversion, conversion.getOutputParameters(), mediaInfo, outputFileName, progressCallbacks.get(mediaInfo.getFileName())));
                 futures.add(converterFuture);
             }
-
-            Mp4v2ArtBuilder artBuilder = new Mp4v2ArtBuilder(conversion);
-            for (Future<ConverterOutput> future : futures) {
-                ConverterOutput output = future.get();
-                ArtWork artWork = output.getMediaInfo().getArtWork();
-                if (artWork != null) {
-                    artBuilder.updateSinglePoster(artWork, 0, output.getOutputFileName());
-                }
-            }
             conversion.finished();
-        } catch (InterruptedException | ExecutionException | IOException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            conversion.error(e.getMessage() + "; " + sw.getBuffer().toString());
         } finally {
             conversion.removeStatusChangeListener(listener);
         }
@@ -68,15 +52,15 @@ public class BatchConversionStrategy implements ConversionStrategy {
     private String determineOutputFilename(String inputFilename) {
         String outputFilename;
         if (conversion.getOutputDestination() == null) {
-            outputFilename = inputFilename.replaceAll("(?i)\\.mp3", ".m4b");
+            outputFilename = inputFilename.replaceAll("(?i)\\.mp4", "-h265.mp4");
         } else {
             File file = new File(inputFilename);
             File outFile = new File(conversion.getOutputDestination(), file.getName());
-            outputFilename = outFile.getAbsolutePath().replaceAll("(?i)\\.mp3", ".m4b");
+            outputFilename = outFile.getAbsolutePath().replaceAll("(?i)\\.mp4", "-h265.mp4");
         }
 
-        if (!outputFilename.endsWith(".m4b")) {
-            outputFilename = outputFilename + ".m4b";
+        if (!outputFilename.endsWith(".mp4")) {
+            outputFilename = outputFilename + ".mp4";
         }
 
         return Utils.makeFilenameUnique(outputFilename);
@@ -85,7 +69,7 @@ public class BatchConversionStrategy implements ConversionStrategy {
 
     protected File prepareFiles(long jobId) throws IOException {
         File fileListFile = new File(System.getProperty("java.io.tmpdir"), "filelist." + jobId + ".txt");
-        List<String> outFiles = IntStream.range(0, conversion.getMedia().size()).mapToObj(i -> "file '" + getTempFileName(jobId, i, ".m4b") + "'").collect(Collectors.toList());
+        List<String> outFiles = IntStream.range(0, conversion.getMedia().size()).mapToObj(i -> "file '" + getTempFileName(jobId, i, ".mp4") + "'").collect(Collectors.toList());
 
         FileUtils.writeLines(fileListFile, "UTF-8", outFiles);
 

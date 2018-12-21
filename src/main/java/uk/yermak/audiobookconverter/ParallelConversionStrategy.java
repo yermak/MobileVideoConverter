@@ -34,21 +34,17 @@ public class ParallelConversionStrategy implements ConversionStrategy {
         List<Future<ConverterOutput>> futures = new ArrayList<>();
         long jobId = System.currentTimeMillis();
 
-        String tempFile = Utils.getTmp(jobId, 999999, ".m4b");
+        String tempFile = Utils.getTmp(jobId, 999999, ".mp4");
 
         File fileListFile = null;
         File metaFile = null;
         try {
-//            MediaInfo maxMedia = maximiseEncodingParameters();
-            conversion.getOutputParameters().updateAuto(conversion.getMedia());
-
-
             fileListFile = prepareFiles(jobId);
             metaFile = MetadataBuilder.prepareMeta(jobId, conversion.getBookInfo(), conversion.getMedia());
 
             List<MediaInfo> prioritizedMedia = prioritiseMedia();
             for (MediaInfo mediaInfo : prioritizedMedia) {
-                String tempOutput = getTempFileName(jobId, mediaInfo.hashCode(), ".m4b");
+                String tempOutput = getTempFileName(jobId, mediaInfo.hashCode(), ".mp4");
                 ProgressCallback callback = progressCallbacks.get(mediaInfo.getFileName());
                 Future<ConverterOutput> converterFuture = executorService.submit(new FFMpegConverter(conversion, conversion.getOutputParameters(), mediaInfo, tempOutput, callback));
                 futures.add(converterFuture);
@@ -63,10 +59,6 @@ public class ParallelConversionStrategy implements ConversionStrategy {
             concatenator.concat();
 
             if (listener.isCancelled()) return;
-            Mp4v2ArtBuilder artBuilder = new Mp4v2ArtBuilder(conversion);
-            artBuilder.coverArt(conversion.getMedia(), tempFile);
-
-            if (listener.isCancelled()) return;
             FileUtils.moveFile(new File(tempFile), new File(conversion.getOutputDestination()));
             conversion.finished();
         } catch (Exception e) {
@@ -76,7 +68,7 @@ public class ParallelConversionStrategy implements ConversionStrategy {
             conversion.error(e.getMessage() + "; " + sw.getBuffer().toString());
         } finally {
             for (MediaInfo mediaInfo : conversion.getMedia()) {
-                FileUtils.deleteQuietly(new File(getTempFileName(jobId, mediaInfo.hashCode(), ".m4b")));
+                FileUtils.deleteQuietly(new File(getTempFileName(jobId, mediaInfo.hashCode(), ".mp4")));
             }
             FileUtils.deleteQuietly(metaFile);
             FileUtils.deleteQuietly(fileListFile);
@@ -104,7 +96,7 @@ public class ParallelConversionStrategy implements ConversionStrategy {
 
     protected File prepareFiles(long jobId) throws IOException {
         File fileListFile = new File(System.getProperty("java.io.tmpdir"), "filelist." + jobId + ".txt");
-        List<String> outFiles = conversion.getMedia().stream().map(mediaInfo -> "file '" + getTempFileName(jobId, mediaInfo.hashCode(), ".m4b") + "'").collect(Collectors.toList());
+        List<String> outFiles = conversion.getMedia().stream().map(mediaInfo -> "file '" + getTempFileName(jobId, mediaInfo.hashCode(), ".mp4") + "'").collect(Collectors.toList());
         FileUtils.writeLines(fileListFile, "UTF-8", outFiles);
         return fileListFile;
     }

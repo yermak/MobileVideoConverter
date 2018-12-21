@@ -16,7 +16,7 @@ import static uk.yermak.audiobookconverter.ConversionMode.*;
  */
 public class ConversionModeController implements ConversionSubscriber {
 
-    private SimpleObjectProperty<ConversionMode> mode = new SimpleObjectProperty<>(this, "mode", PARALLEL);
+    private SimpleObjectProperty<ConversionMode> mode = new SimpleObjectProperty<>(this, "mode", BATCH);
 
     @FXML
     public RadioButton parallel;

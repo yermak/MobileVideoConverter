@@ -1,8 +1,6 @@
 package uk.yermak.audiobookconverter;
 
 import net.bramp.ffmpeg.progress.ProgressParser;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,49 +57,8 @@ public class Utils {
         }
     }
 
-    public static String getOuputFilenameSuggestion(String fileName, AudioBookInfo bookInfo) {
-        StringBuilder builder = new StringBuilder();
-        if (StringUtils.isNotBlank(bookInfo.getWriter())) {
-            builder
-                    .append(StringUtils.trim(bookInfo.getWriter()));
-        }
-        if (StringUtils.isNotBlank(bookInfo.getSeries()) && !StringUtils.equals(bookInfo.getSeries(), bookInfo.getTitle())) {
-            builder
-                    .append(" - [")
-                    .append(StringUtils.trim(bookInfo.getSeries()));
-            builder.append("] ");
-        }
-        if (StringUtils.isNotBlank(bookInfo.getTitle())) {
-            builder
-                    .append(" - ")
-                    .append(StringUtils.trim(bookInfo.getTitle()));
-        }
-        if (StringUtils.isNotBlank(bookInfo.getNarrator())) {
-            builder
-                    .append(" (")
-                    .append(StringUtils.trim(bookInfo.getNarrator()))
-                    .append(")");
-        }
-
-        if (bookInfo.getBookNumber() > 0) {
-            builder
-                    .append(", Part ")
-                    .append(bookInfo.getBookNumber());
-        }
-
-        String result = builder.toString();
-        char[] toRemove = new char[]{':', '\\', '/', '>', '<', '|', '?', '*', '"'};
-        for (char c : toRemove) {
-            result = StringUtils.remove(result, c);
-        }
-        String mp3Filename;
-
-        if (StringUtils.isBlank(result)) {
-            mp3Filename = fileName;
-        } else {
-            mp3Filename = result;
-        }
-        return mp3Filename.replaceFirst("\\.\\w*$", ".m4b");
+    public static String getOuputFilenameSuggestion(String fileName, MetaData bookInfo) {
+        return fileName.replaceFirst("\\.\\w*$", ".mp4");
     }
 
     public static String makeFilenameUnique(String filename) {
@@ -128,15 +85,6 @@ public class Utils {
             }
         } else {
             throw new RuntimeException("Cannot use filename" + " " + filename + " (2)");
-        }
-    }
-
-    public static long checksumCRC32(File file) {
-        try {
-            return FileUtils.checksumCRC32(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
         }
     }
 

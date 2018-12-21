@@ -7,11 +7,11 @@ import java.util.Date;
 import java.util.Properties;
 
 public class AppProperties {
-    public static final String WEBSITE_URL = "https://github.com/yermak/AudioBookConverter";
-    public static final String HELP_URL = "https://github.com/yermak/AudioBookConverter/";
-    private static final String APP_PROPERTIES = "AudioBookConverter-V2.properties";
+    public static final String WEBSITE_URL = "https://github.com/yermak/MobileVideoConverter";
+    public static final String HELP_URL = "https://github.com/yermak/MobileVideoConverter/";
+    private static final String APP_PROPERTIES = "MobileVideoConverter.properties";
     private static final String APPDATA = "APPDATA";
-    private static final String MP3TOI_POD_AUDIO_BOOK_CONVERTER = "AudioBookConverter-V2";
+    private static final String MP3TOI_POD_AUDIO_BOOK_CONVERTER = "MobileVideoConverter";
     public static final String STAY_UPDATED = "stayUpdated";
     public static final String NO_UPDATECHECK_UNTIL = "noUpdateCheckUntil";
 
@@ -25,7 +25,7 @@ public class AppProperties {
         Properties applicationProps = new Properties(defaultProperties);
 
         try {
-            FileInputStream in = new FileInputStream(new File(new File(System.getenv("APPDATA"), "AudioBookConverter-V2"), "AudioBookConverter-V2.properties"));
+            FileInputStream in = new FileInputStream(new File(new File(System.getenv("APPDATA"), "MobileVideoConverter"), "MobileVideoConverter.properties"));
             applicationProps.load(in);
             in.close();
         } catch (Exception e) {
@@ -49,12 +49,12 @@ public class AppProperties {
         applicationProps.put(key, value);
 
         try {
-            File appDir = new File(new File(System.getenv("APPDATA")), "AudioBookConverter-V2");
+            File appDir = new File(new File(System.getenv("APPDATA")), "MobileVideoConverter");
             if (!appDir.exists()) {
                 boolean succ = appDir.mkdir();
                 System.out.println(succ);
             }
-            FileOutputStream out = new FileOutputStream(new File(appDir, "AudioBookConverter-V2.properties"));
+            FileOutputStream out = new FileOutputStream(new File(appDir, "MobileVideoConverter.properties"));
             applicationProps.store(out, "");
             out.close();
         } catch (Exception var5) {

@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>uk.yermak</groupId>
-    <artifactId>audiobookconverter</artifactId>
-    <version>3</version>
+    <artifactId>mobilevideoconverter</artifactId>
+    <version>1</version>
 
 
     <properties>
@@ -44,6 +44,12 @@
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>8.40.14</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.bramp.ffmpeg</groupId>
+            <artifactId>ffmpeg</artifactId>
+            <version>0.6.2</version>
         </dependency>
 
         <dependency>

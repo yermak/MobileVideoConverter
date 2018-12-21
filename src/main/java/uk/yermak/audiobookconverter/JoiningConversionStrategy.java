@@ -32,22 +32,18 @@ public class JoiningConversionStrategy implements ConversionStrategy {
     public void run() {
         long jobId = System.currentTimeMillis();
 
-        String tempFile = Utils.getTmp(jobId, 999999, ".m4b");
+        String tempFile = Utils.getTmp(jobId, 999999, ".mp4");
 
         File metaFile = null;
         File fileListFile = null;
 
         try {
-            conversion.getOutputParameters().updateAuto(conversion.getMedia());
 
             metaFile = MetadataBuilder.prepareMeta(jobId, conversion.getBookInfo(), conversion.getMedia());
             fileListFile = prepareFiles(jobId);
             if (listener.isCancelled()) return;
             Concatenator concatenator = new FFMpegLinearConverter(conversion, tempFile, metaFile.getAbsolutePath(), fileListFile.getAbsolutePath(), conversion.getOutputParameters(), progressCallbacks.get("output"));
             concatenator.concat();
-            if (listener.isCancelled()) return;
-            Mp4v2ArtBuilder artBuilder = new Mp4v2ArtBuilder(conversion);
-            artBuilder.coverArt(conversion.getMedia(), tempFile);
             if (listener.isCancelled()) return;
             FileUtils.moveFile(new File(tempFile), new File(conversion.getOutputDestination()));
             conversion.finished();
@@ -67,7 +63,7 @@ public class JoiningConversionStrategy implements ConversionStrategy {
 
     protected File prepareFiles(long jobId) throws IOException {
         File fileListFile = new File(System.getProperty("java.io.tmpdir"), "filelist." + jobId + ".txt");
-        List<String> outFiles = IntStream.range(0, conversion.getMedia().size()).mapToObj(i -> "file '" + getTempFileName(jobId, i, ".m4b") + "'").collect(Collectors.toList());
+        List<String> outFiles = IntStream.range(0, conversion.getMedia().size()).mapToObj(i -> "file '" + getTempFileName(jobId, i, ".mp4") + "'").collect(Collectors.toList());
 
         FileUtils.writeLines(fileListFile, "UTF-8", outFiles);
 

@@ -59,15 +59,15 @@ public class FFMpegLinearConverter implements Concatenator {
                     "-i", fileListFileName,
                     "-i", metaDataFileName,
                     "-map_metadata", "1",
-                    "-vn",
-                    outputParameters.getFFMpegQualityParameter(), outputParameters.getFFMpegQualityValue(),
-                    "-ar", outputParameters.getFFMpegFrequencyValue(),
-                    "-ac", outputParameters.getFFMpegChannelsValue(),
-                    "-cutoff", outputParameters.getCutoffValue(),
-                    "-f", "ipod",
-                    "-codec:a", "libfdk_aac",
-                    "-codec:v", "copy",
+
+                    "-c:v", outputParameters.getEncoder(),
+                    "-preset", outputParameters.getPreset(),
+                    "-q", String.valueOf(outputParameters.getCRF()),
+                    "-c:a", "aac",
+                    "-vbr", String.valueOf(outputParameters.getQuality()),
+                    "-f", "mp4",
                     "-progress", progressParser.getUri().toString(),
+
                     outputFileName);
 
             ffmpegProcess = ffmpegProcessBuilder.start();
